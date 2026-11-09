@@ -1,0 +1,50 @@
+<!doctype html><meta charset="utf-8"><title>installer</title>
+<script src="https://cjrtnc.leaningtech.com/20260317_2978/loader.js"></script>
+<script>
+// Mirrors src/launcher.js (freej2me-web) without its UI.
+const root='/app'+location.pathname.replace(/\/[^/]*$/,'');
+let lib,U,defaults={},cur=null,loader=null,n=0;
+const kv=async(m,o)=>{const it=await(await m.entrySet()).iterator();while(await it.hasNext()){const e=await it.next();o[await e.getKey()]=await e.getValue();}};
+const toJ=async o=>{const m=await new(await lib.java.util.HashMap)();for(const k of Object.keys(o))await m.put(k,o[k]);return m;};
+const dataUrl=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b);});
+window.api={
+ async init(){
+  await cheerpjInit({enableDebug:false});
+  lib=await cheerpjRunLibrary(root+'/freej2me-web.jar');
+  U=await lib.pl.zb3.freej2me.launcher.LauncherUtil;
+  await U.resetTmpDir();
+  const Config=await lib.org.recompile.freej2me.Config;
+  await kv(Config.DEFAULT_SETTINGS,defaults);
+  if(!(await cjFileBlob('/files/apps.list'))){
+    const ab=await(await fetch('init.zip')).arrayBuffer();
+    await U.importData(new Int8Array(ab));
+  }
+ },
+ async analyse(buf,fileName){
+  cur={settings:{...defaults},props:{},sys:{}};
+  const File=await lib.java.io.File;
+  const jar=await new File('/files/_tmp/'+(n++)+'.jar');
+  await U.copyJar(new Int8Array(buf),jar); cur.jar=jar;
+  const A=await lib.pl.zb3.freej2me.launcher.AnalyserUtil;
+  const r=await A.analyseFile(jar,fileName);
+  if(r.screenWidth!==-1){cur.settings.width=r.screenWidth+'';cur.settings.height=r.screenHeight+'';}
+  if(r.phoneType)cur.settings.phone=r.phoneType;
+  if(loader)await loader.close();
+  const ML=await lib.org.recompile.mobile.MIDletLoader;
+  loader=await ML.getMIDletLoader(jar);
+  return {needsJad:!(await loader.getAppId())};
+ },
+ async addJad(buf){await U.augementLoaderWithJAD(loader,new Int8Array(buf));return {needsJad:!(await loader.getAppId())};},
+ async noJad(fileName){await U.ensureAppId(loader,fileName);loader.name=await loader.getAppId();},
+ async commit(){
+  const appId=await loader.getAppId(), name=loader.name||appId;
+  const ib=await loader.getIconBytes();
+  const icon=ib?await dataUrl(new Blob([ib])):'';
+  await kv(loader.properties,cur.props);
+  await U.initApp(cur.jar,loader,await toJ(cur.settings),await toJ(cur.props),await toJ(cur.sys));
+  return {appId,name,icon};
+ },
+ async remove(id){await U.uninstallApp(id);}
+};
+window.ready=api.init().then(()=>true,e=>{console.error('installer init failed',e);return false;});
+</script>

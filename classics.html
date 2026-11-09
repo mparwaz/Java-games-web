@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#29a7e1">
+<title>Java Classics</title>
+<style>
+:root{--sky:#29a7e1;--grape:#a96fb8;--purple:#9b2fb0;--purple-d:#6f1a85;--key:#333;--key-d:#222;--ink:#fff;--cell:rgba(255,255,255,.07);
+ box-sizing:border-box;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+*{box-sizing:inherit;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+html,body{height:100%;margin:0;overflow:hidden;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);overscroll-behavior:none}
+body{background:linear-gradient(180deg,var(--sky) 0%,#6f8fd0 55%,var(--grape) 100%);
+ background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+ background-image:linear-gradient(var(--cell) 1px,transparent 1px),linear-gradient(90deg,var(--cell) 1px,transparent 1px);background-size:28px 28px}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.view{position:absolute;inset:0;z-index:1;display:none;flex-direction:column}
+.view.on{display:flex}
+:root{padding:0}
+.safe{padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+
+/* ---------- library ---------- */
+#lib{align-items:center;padding:12px 16px}
+.brand{text-align:center;margin-top:8px}
+.brand small{display:block;font-weight:700;letter-spacing:.5px;font-size:15px;opacity:.95}
+.brand h1{margin:0;font-size:clamp(34px,9vw,56px);font-weight:900;line-height:1;letter-spacing:-1px;text-shadow:0 3px 0 rgba(0,0,0,.18)}
+.stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;max-width:640px}
+.arrow{background:none;width:48px;height:80px;flex:none;opacity:.9}
+.arrow svg{width:100%;height:100%;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.arrow:disabled{opacity:.25}
+.card{position:relative;height:100%;max-height:min(60vh,520px);aspect-ratio:3/4;background:#fff;border-radius:6px;padding:10px;box-shadow:0 10px 30px rgba(40,0,70,.35);display:flex;flex-direction:column;transition:transform .2s}
+.card:active{transform:scale(.985)}
+.cover{flex:1;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;color:#fff;overflow:hidden;position:relative}
+.cover .ic{font-size:clamp(46px,14vw,84px);font-weight:900;line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.25)}
+.cover .nm{margin-top:14px;font-size:clamp(17px,5vw,26px);font-weight:800;word-break:break-word;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.cover .ty{margin-top:6px;font-size:12px;opacity:.85}
+.star{position:absolute;right:0;bottom:0;width:64px;height:64px;background:#e9e9ee;border-radius:64px 0 6px 0;display:flex;align-items:flex-end;justify-content:flex-end;padding:12px}
+.star svg{width:30px;height:30px;stroke:#555;stroke-width:2;fill:none}
+.star.fav svg{fill:#f5b400;stroke:#b07d00}
+.empty{width:100%;height:100%;border:3px dashed rgba(255,255,255,.7);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px}
+.empty b{font-size:22px}
+.scrub{width:min(86vw,470px);margin:10px 0 14px;position:relative;height:28px;display:flex;align-items:center}
+.scrub .tr{position:absolute;left:0;right:0;height:14px;background:rgba(40,60,120,.55);border-radius:2px}
+.scrub .th{position:absolute;height:26px;min-width:64px;background:var(--purple);border-bottom:3px solid var(--purple-d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;border-radius:2px;transform:translateX(-50%)}
+.btn{background:linear-gradient(#b445c8,var(--purple));border-radius:14px;box-shadow:0 6px 0 var(--purple-d),0 10px 18px rgba(0,0,0,.25);font-weight:700;letter-spacing:.5px}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--purple-d)}
+.btn.play{width:min(62vw,300px);height:64px;font-size:24px}
+.btn:disabled{filter:grayscale(.7);opacity:.6}
+.bar{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
+.ghost{background:none;border:2px solid #fff;border-radius:5px;padding:10px 16px;font-size:16px}
+.ghost:active{background:rgba(255,255,255,.2)}
+.ghost.add{background:rgba(255,255,255,.18)}
+
+/* ---------- player ---------- */
+#play{align-items:center;justify-content:center}
+.pad{width:100%;height:100%;display:grid;gap:10px;padding:10px 12px;
+ grid-template-areas:"back" "scr" "shoulder" "ctl";grid-template-rows:auto minmax(0,1fr) auto auto;justify-items:center}
+.back{grid-area:back;justify-self:start;width:46px;height:46px;border-radius:8px;background:var(--purple);box-shadow:0 3px 0 var(--purple-d);display:flex;align-items:center;justify-content:center}
+.back svg{width:24px;height:24px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.screenwrap{grid-area:scr;min-height:0;min-width:0;height:100%;aspect-ratio:3/4;max-width:100%;background:var(--purple);padding:clamp(6px,1.6vw,14px);border-radius:14px;box-shadow:0 8px 24px rgba(40,0,70,.35);display:flex}
+.screenwrap iframe{flex:1;width:100%;height:100%;min-height:0;border:3px solid #000;border-radius:2px;background:#000;display:block}
+.shoulder{grid-area:shoulder;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;width:min(100%,560px)}
+.key{background:var(--key);color:#fff;font-weight:800;box-shadow:0 3px 0 #111}
+.key:active,.key.dn{background:#555;transform:translateY(2px);box-shadow:0 1px 0 #111}
+.pill{height:46px;font-size:22px;border-radius:0}
+.pill:first-child{border-radius:24px 0 0 24px}.pill:last-child{border-radius:0 24px 24px 0}
+.ctl{grid-area:ctl;width:100%;display:flex;justify-content:space-between;align-items:center;max-width:640px}
+.dpad{position:relative;width:min(44vw,190px);aspect-ratio:1}
+.dpad button{position:absolute;width:38%;height:38%;border-radius:12px}
+.dpad .u{left:31%;top:0}.dpad .d{left:31%;bottom:0}.dpad .l{left:0;top:31%}.dpad .r{right:0;top:31%}
+.dpad .c{position:absolute;left:36%;top:36%;width:28%;height:28%;background:var(--key-d);border-radius:6px;transform:rotate(45deg)}
+.face{position:relative;width:min(44vw,190px);aspect-ratio:1}
+.face button{position:absolute;width:38%;height:38%;border-radius:50%;background:radial-gradient(circle at 40% 30%,#c056d4,var(--purple));box-shadow:0 5px 0 var(--purple-d);font-size:clamp(20px,6vw,30px)}
+.face button:active,.face button.dn{transform:translateY(3px);box-shadow:0 2px 0 var(--purple-d)}
+.face .y{left:31%;top:0}.face .a{left:31%;bottom:0}.face .x{left:0;top:31%}.face .b{right:0;top:31%}
+.status{position:absolute;left:0;right:0;top:50%;text-align:center;color:#fff;font-size:13px;padding:0 20px;pointer-events:none}
+
+/* landscape: dpad | screen | buttons, L/pause/R under screen */
+@media (orientation:landscape){
+ .pad{grid-template-columns:minmax(120px,1fr) auto minmax(120px,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"back . ." "dpad scr face" "dpad shoulder face";align-items:center;padding:6px 14px}
+ .ctl{display:contents}
+ .dpad{grid-area:dpad;justify-self:start;width:min(30vw,48vh,200px)}
+ .face{grid-area:face;justify-self:end;width:min(30vw,48vh,200px)}
+ .shoulder{width:min(60vh,420px)}
+ .pill{height:38px;font-size:18px}
+ .back{position:absolute;left:12px;top:8px}
+ #lib .card{max-height:48vh}
+ #lib .brand h1{font-size:34px}
+ .btn.play{height:52px}
+ .scrub{margin:4px 0 10px}
+}
+@media (orientation:landscape) and (max-height:430px){.brand small{display:none}.bar{margin-top:8px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+#busy,#dlg{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(30,10,60,.6);text-align:center;padding:24px;font-weight:700;font-size:18px}
+#busy.on,#dlg.on{display:flex}
+#dlg .box{background:#fff;color:#222;border-radius:12px;padding:20px;max-width:360px;display:flex;flex-direction:column;gap:12px;font-weight:600}
+#dlg .ghost{color:var(--purple-d);border-color:var(--purple);text-align:center}
+.cover img{width:64px;height:64px;image-rendering:pixelated;object-fit:contain}
+</style>
+</head>
+<body>
+
+<!-- LIBRARY -->
+<section id="lib" class="view on safe">
+ <div class="brand"><small>JAVA</small><h1>CLASSICS</h1></div>
+ <div class="stage">
+  <button class="arrow" id="prev" aria-label="Previous game"><svg viewBox="0 0 40 80"><path d="M32 6 8 40l24 34"/></svg></button>
+  <div id="cardSlot" style="height:100%;display:flex;align-items:center;justify-content:center;flex:1"></div>
+  <button class="arrow" id="next" aria-label="Next game"><svg viewBox="0 0 40 80"><path d="M8 6l24 34L8 74"/></svg></button>
+ </div>
+ <div class="scrub"><div class="tr"></div><div class="th" id="th">0/0</div></div>
+ <button class="btn play" id="playBtn">PLAY</button>
+ <div class="bar">
+  <label class="ghost add" for="file" id="addLbl">ADD GAMES</label>
+  <button class="ghost" id="del">REMOVE</button>
+ </div>
+ <!-- no accept attribute: every file stays selectable -->
+ <input id="file" type="file" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+</section>
+
+<div id="busy"><span id="busyT">Working…</span></div>
+<div id="dlg"><div class="box"><span>This game needs its .jad descriptor to run properly.</span>
+ <label class="ghost" for="jadIn">Choose .jad file</label><button class="ghost" id="dlgSkip">Continue without it</button></div></div>
+<input id="jadIn" type="file" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+<!-- PLAYER -->
+<section id="play" class="view safe">
+ <div class="pad">
+  <button class="back" id="back" aria-label="Back to library"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg></button>
+  <div class="screenwrap"><iframe id="emu" title="Game screen" allow="autoplay; fullscreen"></iframe></div>
+  <div class="shoulder">
+   <button class="key pill" data-k="F1">L</button>
+   <button class="key pill" id="pause">II</button>
+   <button class="key pill" data-k="F2">R</button>
+  </div>
+  <div class="ctl">
+   <div class="dpad">
+    <button class="key u" data-k="ArrowUp" aria-label="Up"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="6.5" y="2" width="3" height="12" fill="#fff"/></svg></button>
+    <button class="key l" data-k="ArrowLeft" aria-label="Left"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="6.5" width="12" height="3" fill="#fff"/></svg></button>
+    <div class="c"></div>
+    <button class="key r" data-k="ArrowRight" aria-label="Right"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="6.5" width="12" height="3" fill="#fff"/></svg></button>
+    <button class="key d" data-k="ArrowDown" aria-label="Down"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="6.5" y="2" width="3" height="12" fill="#fff"/></svg></button>
+   </div>
+   <div class="face">
+    <button class="y" data-k="NumpadDivide">Y</button><button class="x" data-k="NumpadAsterisk">X</button>
+    <button class="b" data-k="Digit0">B</button><button class="a" data-k="Enter">A</button>
+   </div>
+  </div>
+ </div>
+ <div class="status" id="status"></div>
+</section>
+
+<script>
+/* ===== Engine: freej2me-web (same-origin run.html in an iframe) ===== */
+const emu=document.getElementById("emu");
+if("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister())).catch(()=>{});
+const Engine={
+  key(code,down){
+    try{
+      const d=emu.contentDocument, c=d&&d.getElementById("display"); if(!c) return;
+      const key=/^Digit/.test(code)?code.slice(5):code;
+      c.dispatchEvent(new emu.contentWindow.KeyboardEvent(down?"keydown":"keyup",{code,key,bubbles:true,cancelable:true}));
+    }catch(_){}
+  }
+};
+emu.addEventListener("load",()=>{ try{ const d=emu.contentDocument; if(!d||!d.body||emu.src==="about:blank") return;
+  d.body.style.background="#000"; const a=d.getElementById("screen-area"); if(a) a.style.background="#000";
+  const l=d.getElementById("loading"); if(l) l.style.color="#fff"; }catch(_){} });
+
+/* ===== Storage (IndexedDB) ===== */
+const DB = {
+  db:null,
+  open(){ return new Promise(r=>{ try{ const q=indexedDB.open("j2me-lib2",1);
+    q.onupgradeneeded=()=>q.result.createObjectStore("g",{keyPath:"id"});
+    q.onsuccess=()=>{this.db=q.result;r()}; q.onerror=()=>r(); }catch(e){r()} }); },
+  tx(m){ return this.db.transaction("g",m).objectStore("g"); },
+  all(){ return new Promise(r=>{ if(!this.db) return r([]); const q=this.tx("readonly").getAll(); q.onsuccess=()=>r(q.result||[]); q.onerror=()=>r([]); }); },
+  put(g){ return new Promise(r=>{ if(!this.db) return r(); const q=this.tx("readwrite").put(g); q.onsuccess=q.onerror=()=>r(); }); },
+  del(id){ return new Promise(r=>{ if(!this.db) return r(); const q=this.tx("readwrite").delete(id); q.onsuccess=q.onerror=()=>r(); }); }
+};
+
+/* ===== Library ===== */
+const $=s=>document.querySelector(s);
+let games=[], idx=0;
+const hues=[["#d9562b","#7a1d6e"],["#1f8fd0","#3a2a8f"],["#2fa86b","#145a4a"],["#e0a020","#a02a2a"],["#8a3fd0","#2a1a70"],["#d03f7f","#6a1a4a"]];
+const hash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7);
+const clean=n=>n.replace(/\.(jar|jad)$/i,"").replace(/[_\-]+/g," ").trim()||"Untitled";
+
+function render(){
+  const slot=$("#cardSlot"); slot.innerHTML="";
+  const has=games.length>0;
+  $("#prev").disabled=idx<=0||!has; $("#next").disabled=idx>=games.length-1||!has;
+  $("#playBtn").disabled=!has; $("#del").style.visibility=has?"visible":"hidden";
+  if(!has){
+    slot.innerHTML='<div class="empty"><b>No games yet</b><span>Tap Add games and choose any .jar or .jad file.</span></div>';
+    $("#th").textContent="0/0"; $("#th").style.left="50%"; return;
+  }
+  const g=games[idx], h=hues[Math.abs(hash(g.name))%hues.length];
+  const c=document.createElement("div"); c.className="card";
+  c.innerHTML=`<div class="cover" style="background:linear-gradient(155deg,${h[0]},${h[1]})"><div class="ic"></div><div class="nm"></div><div class="ty"></div></div>
+   <button class="star ${g.fav?"fav":""}" aria-label="Favorite"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.8 6.3.7-4.7 4.3 1.3 6.2L12 17l-5.6 3 1.3-6.2L3 9.5l6.3-.7z"/></svg></button>`;
+  if(g.icon){const im=new Image();im.src=g.icon;c.querySelector(".ic").appendChild(im);}else c.querySelector(".ic").textContent=g.name.trim().charAt(0).toUpperCase();
+  c.querySelector(".nm").textContent=g.name;
+  c.querySelector(".ty").textContent="J2ME";
+  c.querySelector(".star").onclick=async e=>{ e.stopPropagation(); g.fav=!g.fav; await DB.put(g); render(); };
+  c.onclick=()=>launch(g);
+  slot.appendChild(c);
+  $("#th").textContent=(idx+1)+"/"+games.length;
+  $("#th").style.left=(games.length>1?10+idx/(games.length-1)*80:50)+"%";
+}
+async function load(){ await DB.open(); games=(await DB.all()).sort((a,b)=>(b.fav-a.fav)||a.added-b.added); render(); }
+$("#prev").onclick=()=>{idx=Math.max(0,idx-1);render()};
+$("#next").onclick=()=>{idx=Math.min(games.length-1,idx+1);render()};
+$("#playBtn").onclick=()=>games[idx]&&launch(games[idx]);
+const busy=t=>{ $("#busyT").textContent=t||""; $("#busy").classList.toggle("on",!!t); };
+let inst=null;
+function openInstaller(){ return new Promise(res=>{
+  const f=document.createElement("iframe"); f.src="install.html"; f.style.cssText="position:fixed;width:0;height:0;border:0;visibility:hidden"; document.body.appendChild(f); inst=f;
+  const t=setInterval(async()=>{ const w=f.contentWindow; if(w&&w.ready){ clearInterval(t); res((await w.ready)?w.api:null); } },150); }); }
+async function closeInstaller(){ await new Promise(r=>setTimeout(r,400)); if(inst){inst.remove();inst=null;} }
+function askJad(){ return new Promise(res=>{ const d=$("#dlg"), inp=$("#jadIn"); d.classList.add("on"); inp.value="";
+  inp.onchange=()=>{ d.classList.remove("on"); res(inp.files[0]||null); };
+  $("#dlgSkip").onclick=()=>{ d.classList.remove("on"); res(null); }; }); }
+const base=n=>n.replace(/\.[^.]+$/,"").toLowerCase();
+$("#del").onclick=async()=>{ const g=games[idx]; if(!g||!confirm('Remove "'+g.name+'" from your library?')) return;
+  busy("Removing…"); const api=await openInstaller(); if(api) await api.remove(g.id); await closeInstaller();
+  await DB.del(g.id); games.splice(idx,1); idx=Math.max(0,Math.min(idx,games.length-1)); busy(); render(); };
+$("#file").onchange=async e=>{
+  const files=[...e.target.files]; e.target.value="";
+  const jars=files.filter(f=>/\.jar$/i.test(f.name)), jads=files.filter(f=>/\.jad$/i.test(f.name));
+  if(!jars.length){ alert("Choose at least one .jar game file (a .jad can be added alongside it)."); return; }
+  busy("Starting Java runtime… (first time takes a moment)");
+  const api=await openInstaller();
+  if(!api){ busy(); await closeInstaller(); alert("The Java runtime failed to start. Check your internet connection and the browser console."); return; }
+  const failed=[];
+  for(const f of jars){
+    try{
+      busy("Installing "+f.name+"…");
+      let r=await api.analyse(await f.arrayBuffer(),f.name);
+      if(r.needsJad){
+        let j=jads.find(x=>base(x.name)===base(f.name))||(jars.length===1&&jads.length===1?jads[0]:null);
+        busy(); if(!j) j=await askJad(); busy("Installing "+f.name+"…");
+        if(j) r=await api.addJad(await j.arrayBuffer());
+        if(!j||r.needsJad) await api.noJad(f.name);
+      }
+      const m=await api.commit();
+      const old=games.findIndex(x=>x.id===m.appId);
+      const g={id:m.appId,name:m.name,icon:m.icon,fname:f.name,fav:old>=0?games[old].fav:false,added:Date.now()};
+      if(old>=0) games.splice(old,1); games.push(g); await DB.put(g); idx=games.length-1;
+    }catch(err){ console.error(err); failed.push(f.name); }
+  }
+  await closeInstaller(); busy(); render();
+  if(failed.length) alert("Could not install: "+failed.join(", "));
+};
+
+/* ===== Player ===== */
+async function launch(g){
+  $("#lib").classList.remove("on"); $("#play").classList.add("on");
+  emu.src="run.html?app="+encodeURIComponent(g.id)+"&fractionScale=1";
+}
+function quit(){ emu.src="about:blank"; $("#play").classList.remove("on"); $("#lib").classList.add("on"); }
+$("#back").onclick=quit; $("#pause").onclick=()=>{ Engine.key("Escape",true); setTimeout(()=>Engine.key("Escape",false),80); };
+
+// Touch / pointer controls (multi-touch safe)
+document.querySelectorAll("[data-k]").forEach(b=>{
+  const k=b.dataset.k;
+  const dn=e=>{ e.preventDefault(); b.setPointerCapture?.(e.pointerId); b.classList.add("dn"); Engine.key(k,true); if(navigator.vibrate) navigator.vibrate(8); };
+  const up=e=>{ b.classList.remove("dn"); Engine.key(k,false); };
+  b.addEventListener("pointerdown",dn); b.addEventListener("pointerup",up); b.addEventListener("pointercancel",up);
+  b.addEventListener("contextmenu",e=>e.preventDefault());
+});
+// Keyboard: arrows, Enter/Space=fire, Q/E=soft keys, digits, * and #
+const KM={ArrowUp:"ArrowUp",ArrowDown:"ArrowDown",ArrowLeft:"ArrowLeft",ArrowRight:"ArrowRight",Enter:"Enter"," ":"Enter",q:"F1",w:"F2",e:"NumpadAsterisk",r:"NumpadDivide",Escape:"Escape"};
+for(let i=0;i<=9;i++)KM[i]="Digit"+i;
+addEventListener("keydown",e=>{ if(!$("#play").classList.contains("on")||e.repeat) return; const k=KM[e.key]; if(k!=null){e.preventDefault();Engine.key(k,true);} });
+addEventListener("keyup",e=>{ if(!$("#play").classList.contains("on")) return; const k=KM[e.key]; if(k!=null){e.preventDefault();Engine.key(k,false);} });
+// Swipe on library
+let sx=null; $("#lib").addEventListener("touchstart",e=>sx=e.touches[0].clientX,{passive:true});
+$("#lib").addEventListener("touchend",e=>{ if(sx==null) return; const d=e.changedTouches[0].clientX-sx; sx=null;
+  if(Math.abs(d)>60){ idx=Math.max(0,Math.min(games.length-1,idx+(d<0?1:-1))); render(); } },{passive:true});
+load();
+</script>
+</body>
+</html>
